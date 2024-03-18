@@ -3,9 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Take a quiz</title>
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="general.css">
+  <link rel="stylesheet" href="cards.css">
 </head>
 <body>
+  <ul class="topnav">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="add-question.html">Add questions</a></li>
+    <li><a href="make-a-quiz.html">Create a quiz</a></li>
+    <li><a class="active" href="take-a-quiz.html">Take a quiz</a></li>
+    <li class="right"><a href="#about">About</a></li>
+  </ul>
+
+  <h2>Here are the list of all available quizzes. Click on a quiz to start taking the quiz</h2>
+
+  <div id="list" class="cards"></div>
+
+  <script>
+    let host = "http://localhost:8080";
+    let quizzes = [];
+    displayTheQuizzes();
+
+    async function getAll() {
+      let response = await fetch(host + "/quizzes");
+      let result = await response.json();
+      return result;
+    }
+
+    async function displayTheQuizzes() {
+      if (quizzes.length == 0) {
+        quizzes = await getAll();
+      }
+
+      let list = document.getElementById("list");
+      list.innerHTML = "";
+
+      for (let i = 0; i < quizzes.length; i++) {
+        let card = document.createElement("div");
+        card.classList.add("card", "quizzesCard");
+        let innerHtml = `
+          <h2>${quizzes[i].id}</h2>
+          <p>${quizzes[i].title}</p>
+          <p>(${quizzes[i].questions.length} questions)</p>
+        `;
+        
+
+
+        card.innerHTML = innerHtml;
+        card.onclick = function() {
+          window.location.href = "quiz.html?id=" + quizzes[i].id;
+        };
+        list.appendChild(card);
+      }
+    }
+  </script>
   
 </body>
 </html>

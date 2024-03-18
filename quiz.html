@@ -3,9 +3,208 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Quiz</title>
+  <link rel="stylesheet" href="quiz.css">
+  <!-- <link rel="stylesheet" href="cards.css"> -->
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="general.css">
 </head>
 <body>
+
+
+  <!-- Display a singular question -->
+  <div id="question"></div>
+  <button id="previous" class="hide">Previous</button>
+  <button id="next">Next</button>
+  <p id="questionTracker">(Question 1 out of 4)</p>
+
+
+
+  <script>
+    let host = "http://localhost:8080";
+    let questions = [];
+    let quiz = {};
+    let currentQuestion = 0;
+    displayTheQuiz();
+    let userAnswers = [];
+
+    async function getQuiz() {
+      let url = new URL(window.location.href);
+      let id = url.searchParams.get("id");
+      let response = await fetch(host + "/quizzes/" + id);
+      let result = await response.json();
+      return result;
+    }
+
+    //Display the first question
+    async function displayTheQuiz() {
+      quiz = await getQuiz();
+      questions = quiz.questions;
+      
+      displayQuestion();
+    }
+
+    async function displayQuestion() {
+      let question = questions[currentQuestion];
+      let questionDiv = document.getElementById("question");
+
+      let div = document.createElement("div");
+      questionDiv.classList.add("card");
+      questionDiv.innerHTML = `
+        
+        <div class="container">
+          <img src="http://localhost:8080/questions/${question.id}/image" alt="question" style="width:100%">
+
+          <h4><b>${question.id}</b></h4> 
+          <p>${question.description}</p>
+          <form>
+              <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+              <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+              <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+              <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+              <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+              <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+          </form> 
+        </div>
+      `;
+      //questionDiv.appendChild(div);
+    }
+
+    //Display the next question
+    let nextButton = document.getElementById("next");
+    nextButton.onclick = async function() {
+      //Validation - make sure the user has selected an answer
+      if (!document.querySelector(`input[name="q2Answer"]:checked`)) {
+        alert("Please select an answer");
+        return;
+      }
+
+
+
+      currentQuestion++;
+
+      let answer = document.querySelector(`input[name="q2Answer"]:checked`).value;
+      
+      userAnswers.push(answer);
+      
+
+      
+      if (currentQuestion < questions.length) {
+        displayQuestion();
+        //Update the question tracker
+        let questionTracker = document.getElementById("questionTracker");
+        questionTracker.innerHTML = `(Question ${currentQuestion+1} out of ${questions.length})`;
+
+        //Create and update previous button
+        let previousButton = document.getElementById("previous");
+        previousButton.classList.remove("hide");
+      
+        
+      } else {
+        // let questionDiv = document.getElementById("question");
+        // questionDiv.innerHTML = "The end";
+        getResults();
+      }
+    }
+
+    let previousButton = document.getElementById("previous");
+    previousButton.onclick = async function() {
+      currentQuestion--;
+      displayQuestion();
+      //Update the question tracker
+      let questionTracker = document.getElementById("questionTracker");
+      questionTracker.innerHTML = `(Question ${currentQuestion+1} out of ${questions.length})`;
+
+      //Hide the previous button if we are at the first question
+      if (currentQuestion == 0) {
+        previousButton.classList.add("hide");
+      }
+    }
+
+    //Results
+    async function getResults() {
+      //Get how many questions the user got right
+      let correct = 0;
+      // console.log(userAnswers);
+
+      let realAnswers = questions.map(q => q.answer);
+      // console.log(realAnswers);
+
+      //Convert MY answer into the proper format, then compare
+      for (let i = 0; i < questions.length; i++) {
+        let question = questions[i];
+        if (userAnswers[i] === "A") {
+          userAnswers[i] = question.choices[0];
+        } else if (userAnswers[i] === "B") {
+          userAnswers[i] = question.choices[1];
+        } else if (userAnswers[i] === "C") {
+          userAnswers[i] = question.choices[2];
+        }
+      }
+      // console.log(userAnswers);
+
+      for (let i = 0; i < questions.length; i++) {
+        if (userAnswers[i] === realAnswers[i]) {
+          correct++;
+        }
+      }
+
+      
+
+
+      
+      
+
+      //Display the results - remove everything
+      let questionDiv = document.getElementById("question");
+      questionDiv.remove();
+      // questionDiv.innerHTML = `You got ${correct} out of ${questions.length} questions right`;
+      let nextButton = document.getElementById("next");
+      nextButton.remove();
+      let previousButton = document.getElementById("previous");
+      previousButton.remove();
+      let questionTracker = document.getElementById("questionTracker");
+      questionTracker.remove();
+
+      //Create nav
+      let ul = document.createElement("ul");
+      ul.classList.add("topnav");
+      ul.innerHTML = `
+        <li><a href="index.html">Home</a></li>
+        <li><a href="add-question.html">Add questions</a></li>
+        <li><a href="make-a-quiz.html">Create a quiz</a></li>
+        <li><a class="active" href="take-a-quiz.html">Take a quiz</a></li>
+        <li class="right"><a href="#about">About</a></li>
+      `;
+      document.body.appendChild(ul);
+
+      //Display the results
+      let resultsDiv = document.createElement("div");
+      resultsDiv.id = "results";
+      let whatQuiz = document.createElement("h3");
+      whatQuiz.innerHTML = `You completed the quiz ${quiz.title}.`;
+      let score = document.createElement("h3");
+      score.innerHTML = `You scored ${correct} out of ${questions.length}.`;
+      resultsDiv.appendChild(whatQuiz);
+      resultsDiv.appendChild(score);
+      document.body.appendChild(resultsDiv);
+
+
+
+
+
+
+
+
+
+    }
+
+
+  </script>
+
+
   
 </body>
 </html>

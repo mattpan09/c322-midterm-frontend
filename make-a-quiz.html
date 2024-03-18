@@ -3,9 +3,267 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Create a quiz</title>
+  <link rel="stylesheet" href="navbar.css">
+  <link rel="stylesheet" href="general.css">
+  <link rel="stylesheet" href="cards.css">
+  <link rel="stylesheet" href="make-a-quiz.css">
 </head>
 <body>
+  <ul class="topnav">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="add-question.html">Add questions</a></li>
+    <li><a class="active" href="make-a-quiz.html">Create a quiz</a></li>
+    <li><a href="take-a-quiz.html">Take a quiz</a></li>
+    <li class="right"><a href="#about">About</a></li>
+  </ul>
   
+
+  <div class="questions">
+    <h2>Questions Bank</h2>
+    <h3>Click on a question to add it to the quiz.</h3>
+
+    <div id="list" class="cards"></div>
+
+  </div>
+
+  <div class="quiz">
+    <h2 id="titleUpdate">The new quiz (0 questions)</h2>
+    <label>Quiz title:</label>
+    <input type="text" id="quizTitle">
+    <br>
+    <button type="submit" id="saveChanges">Save your changes</button>
+    <button type="submit" id="saveQuiz">Save this quiz and start a new one</button>
+    <h3>If you want to remove a question from the quiz, you can click on the question here and it will be removed from the quiz.</h3>
+    
+    <div id="quizQuestions" class="cards"></div>
+
+  </div>
+
+  <script>
+    let host = "http://localhost:8080";
+    let questions = [];
+    displayTheQuestions();
+
+    async function getAll() {
+      let response = await fetch(host + "/questions");
+      let result = await response.json();
+      return result;
+    }
+
+    async function displayTheQuestions() {
+      if (questions.length == 0) {
+        questions = await getAll();
+      }
+
+      let list = document.getElementById("list");
+      list.innerHTML = "";
+
+      for (let question of questions) {
+        let div = document.createElement("div");
+        div.className = "card";
+        div.id = "q" + question.id;
+        div.onclick = function() {
+          addQuestionToQuiz(question.id);
+        };
+        let innerHtml = `
+
+       
+      <img src="http://localhost:8080/questions/${question.id}/image" alt="question" style="width:100%">
+      <div class="container">
+        <h4><b>${question.id}</b></h4> 
+        <p>${question.description}</p>
+        <form>
+            <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+            <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+            <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+            <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+            <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+            <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+        </form> 
+      </div>
+   
+          `;
+        div.innerHTML = innerHtml;
+        list.appendChild(div);
+      }
+    }
+
+    async function addQuestionToQuiz(questionId) {
+      let question = questions.find(q => q.id == questionId);
+      let div = document.createElement("div");
+      div.className = "card";
+      let innerHtml = `
+      <img src="http://localhost:8080/questions/${question.id}/image" alt="question" style="width:100%">
+      <div class="container">
+        <h4><b>${question.id}</b></h4> 
+        <p>${question.description}</p>
+        <form>
+            <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+            <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+            <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+            <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+            <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+            <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+        </form> 
+      </div>
+      `;
+      div.innerHTML = innerHtml;
+      div.id = question.id;
+      div.onclick = function() {
+        removeQuestionFromQuiz(question.id);
+      };
+      let quizQuestions = document.getElementById("quizQuestions");
+      quizQuestions.appendChild(div);
+
+      //Remove from question bank
+      let list = document.getElementById("list");
+      // document.getElementById(questionId).remove();
+      document.getElementById("q" + questionId).remove();
+
+      //Update title
+      let title = document.getElementById("titleUpdate");
+      title.innerHTML = "The new quiz (" + quizQuestions.childElementCount + " questions)";
+      
+    }
+
+    function removeQuestionFromQuiz(questionId) {
+      // let quizQuestions = document.getElementById("quizQuestions");
+      document.getElementById(questionId).remove();
+
+      //Add back to the question bank
+      let list = document.getElementById("list");
+      let question = questions.find(q => q.id == questionId);
+      let div = document.createElement("div");
+      div.className = "card";
+      div.id = "q" + question.id;
+      div.onclick = function() {
+        addQuestionToQuiz(question.id);
+      };
+      let innerHtml = `
+
+       
+      <img src="http://localhost:8080/questions/${question.id}/image" alt="question" style="width:100%">
+      <div class="container">
+        <h4><b>${question.id}</b></h4> 
+        <p>${question.description}</p>
+        <form>
+            <input type="radio" id="q${question.id}ptionA" name="q2Answer" value="A">
+            <label for="q${question.id}ptionA">${question.choices[0]}</label><br>
+
+            <input type="radio" id="q${question.id}ptionB" name="q2Answer" value="B">
+            <label for="q${question.id}ptionB">${question.choices[1]}</label><br>
+
+            <input type="radio" id="q${question.id}ptionC" name="q2Answer" value="C">
+            <label for="q${question.id}ptionC">${question.choices[2]}</label><br>       
+        </form> 
+      </div>
+   
+          `;
+      div.innerHTML = innerHtml;
+      list.appendChild(div);
+
+      //Update title
+      let title = document.getElementById("titleUpdate");
+      title.innerHTML = "The new quiz (" + quizQuestions.childElementCount + " questions)";
+      
+    
+    }
+
+
+    //Button Behavior
+    //"Save your changes" - changes sent to the backend application and are saved in the backend database
+      //First time => post request
+      //Subsequent times => put request
+    
+    //LOGIC: CALL put, if it returns 404, call post
+    let counter = 0; //To see if quiz is being saved for the first time
+    let id = -1;
+    let saveChanges = document.getElementById("saveChanges");
+    saveChanges.onclick = async function() {
+      let quizTitle = document.getElementById("quizTitle").value;
+      let quizQuestions = document.getElementById("quizQuestions");
+      let questionIds = [];
+      for (let i = 0; i < quizQuestions.childElementCount; i++) {
+        questionIds.push(quizQuestions.children[i].id);
+      }
+
+      let quiz = {
+        title: quizTitle,
+        questionIds: questionIds
+      };
+
+
+      if (counter == 0) {
+        counter++;
+        let response = await fetch(host + "/quizzes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(quiz)
+        });
+        id = await response.json();
+      } 
+      else {
+        counter++;
+        let response = await fetch(host + "/quizzes/" + id, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(quiz)
+        });
+      }
+      alert("Changes saved!");
+    };
+
+    
+    //"Save this quiz and start a new one" - changes sent to the backend application and are saved in the backend database
+      //Page should be refreshed so user can start creating a new quiz
+    let saveQuiz = document.getElementById("saveQuiz");
+    saveQuiz.onclick = async function() {
+      let quizTitle = document.getElementById("quizTitle").value;
+      let quizQuestions = document.getElementById("quizQuestions");
+      let questionIds = [];
+      for (let i = 0; i < quizQuestions.childElementCount; i++) {
+        questionIds.push(quizQuestions.children[i].id);
+      }
+
+      let quiz = {
+        title: quizTitle,
+        questionIds: questionIds
+      };
+
+      if (counter == 0) {
+        counter++;
+        let response = await fetch(host + "/quizzes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(quiz)
+        });
+        id = await response.json();
+      } 
+      else {
+        counter++;
+        let response = await fetch(host + "/quizzes/" + id, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(quiz)
+        });
+      }
+      alert("Quiz saved!");
+      location.reload();
+    };
+
+  </script>
 </body>
 </html>
